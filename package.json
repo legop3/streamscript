@@ -1,0 +1,15 @@
+{
+  "name": "streamscript",
+  "version": "1.0.0",
+  "main": "ollamer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "tmi.js": "^1.8.5"
+  }
+}
