@@ -1,0 +1,9 @@
+{
+    "objects": {
+        "ollamaLoadingSpinner": {
+            "name": "loading",
+            "scene": "Scene"
+        }
+    }
+    
+}
