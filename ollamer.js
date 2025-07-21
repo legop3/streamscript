@@ -46,20 +46,20 @@ class StreamNarrator {
     
     try {
       const response = await ollama.chat({
-        // model: 'hf.co/unsloth/Qwen3-30B-A3B-GGUF:Q4_K_M',
-        model: 'llama3.1:70b-instruct-q4_0',
+        model: 'hf.co/unsloth/Qwen3-30B-A3B-GGUF:Q4_K_M',
+        // model: 'llama3.1:70b-instruct-q4_0',
         system: this.systemPrompt,
         messages: this.messages,
         tools: tools,
         options: {
           temperature: isNarration ? 1.2 : 1.0, // Higher creativity for narration
-          top_p: 0.9,
-          top_k: 40,
-          repeat_penalty: 1.1,
-          num_ctx: 2048,
-          num_predict: -1,
+          // top_p: 0.9,
+          // top_k: 40,
+          // repeat_penalty: 1.1,
+          // num_ctx: 2048,
+          // num_predict: -1,
         },
-        keep_alive: -1
+        keep_alive: 600
       })
       
       const assistantResponse = response.message.content
