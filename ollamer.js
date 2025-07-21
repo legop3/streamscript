@@ -3,20 +3,24 @@ import fs from 'fs'
 import tmi from 'tmi.js'
 // import { OBSWebSocket, EventSubscription } from 'obs-websocket-js'
 // import config from './sceneConfig.json' assert { type: 'json'}
+import { loadingSpinnerControl } from './obs.js'
+import { tools } from './tools.js'
+
+const outfolder = 'outputs'
+const outfile = 'out.txt'
+
+
 
 const olserver = 'http://192.168.0.22:11434'
-const outfile = 'out.txt'
 const systemPrompt = await fs.readFileSync('system.txt', 'utf8')
 const ollama = new Ollama({host: olserver})
-const obs = new OBSWebSocket();
+// const obs = new OBSWebSocket();
 
 // Configuration for narration timing
 const NARRATION_INTERVAL = 30000 // 30 seconds between narrations
 const CHAT_COOLDOWN = 5000 // 5 seconds cooldown after chat messages
 
-
-
-await obs.connect()
+// await obs.connect()
 
 class StreamNarrator {
   constructor(systemPrompt) {
@@ -36,19 +40,17 @@ class StreamNarrator {
     }
     
     this.isGenerating = true
-    let printout = ''
-    // fs.writeFileSync(outfile, printout)
     
     // Add user message to conversation
     this.messages.push({role: 'user', content: prompt})
     
     try {
       const response = await ollama.chat({
-        model: 'hf.co/unsloth/Qwen3-30B-A3B-GGUF:Q4_K_M',
+        // model: 'hf.co/unsloth/Qwen3-30B-A3B-GGUF:Q4_K_M',
+        model: 'llama3.1:70b-instruct-q4_0',
         system: this.systemPrompt,
         messages: this.messages,
         tools: tools,
-        stream: true,
         options: {
           temperature: isNarration ? 1.2 : 1.0, // Higher creativity for narration
           top_p: 0.9,
@@ -60,23 +62,21 @@ class StreamNarrator {
         keep_alive: -1
       })
       
-      let assistantResponse = ''
-      for await (const part of response) {
-        process.stdout.write(part.message.content)
-        if (part.message.tool_calls) {
-          console.log(part.message.tool_calls[0].function.arguments)
-        }
-        printout += part.message.content
-        assistantResponse += part.message.content
-        fs.writeFileSync(outfile, printout)
+      const assistantResponse = response.message.content
+      
+      // Handle tool calls if present
+      if (response.message.tool_calls) {
+        console.log('Tool calls:', response.message.tool_calls)
       }
       
       // Add assistant response to conversation
       this.messages.push({role: 'assistant', content: assistantResponse})
       
       // Clean up response and write to file
-      assistantResponse = assistantResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
-      fs.writeFileSync(outfile, assistantResponse)
+      const cleanResponse = assistantResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+      fs.writeFileSync(outfile, cleanResponse)
+      
+      console.log(assistantResponse)
       
       return assistantResponse
     } catch (error) {
@@ -122,9 +122,7 @@ class StreamNarrator {
       narrationPrompt += "The chat has been quiet. "
     }
     
-    // narrationPrompt += "Imagine what might be happening on stream and provide engaging commentary."\
-
-    console.log('narraration prompt', narrationPrompt)
+    console.log('narration prompt:', narrationPrompt)
     
     console.log('\n--- PERFORMING NARRATION ---')
     await this.generateResponse(narrationPrompt, true)
@@ -189,12 +187,14 @@ client.on('message', async (channel, tags, message, self) => {
   if (message.toLowerCase().startsWith('!stop')) {
     narrator.stop()
     console.log('Narration stopped by chat command')
+    loadingSpinnerControl(true)
     return
   }
   
   if (message.toLowerCase().startsWith('!start')) {
     narrator.startNarration()
     console.log('Narration started by chat command')
+    loadingSpinnerControl(false)
     return
   }
   
@@ -218,7 +218,7 @@ process.on('SIGINT', () => {
   console.log('\nShutting down...')
   narrator.stop()
   client.disconnect()
-  obs.disconnect()
+  // obs.disconnect()
   process.exit(0)
 })
 
