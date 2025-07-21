@@ -10,6 +10,7 @@
   "description": "",
   "type": "module",
   "dependencies": {
+    "node-sfx": "^1.0.0",
     "obs-websocket-js": "^5.0.6",
     "ollama": "^0.5.16",
     "tmi": "^2.0.0",
