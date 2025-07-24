@@ -236,7 +236,7 @@ class StreamNarrator {
     
     if (this.recentChatMessages.length > 0) {
       narrationPrompt += `Recent chat activity: ${this.recentChatMessages.join(', ')}. `
-      this.recentChatMessages = this.recentChatMessages.slice(-5)
+      this.recentChatMessages = this.recentChatMessages.slice(-1)
     } else {
       narrationPrompt += "The chat has been quiet. "
     }

@@ -41,7 +41,7 @@ export class BaseChatHandler extends EventEmitter {
    * Commands start with ! and are followed by arguments
    */
   parseCommand(message) {
-    if (!message.startsWith('!')) {
+    if (!message.startsWith('-')) {
       return null
     }
     
