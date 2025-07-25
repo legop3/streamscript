@@ -4,12 +4,14 @@ import { loadingSpinnerControl } from './obs.js'
 import { tools } from './tools.js'
 import { TwitchChatHandler } from './chat/twitch.js'
 import { YouTubeChatHandler } from './chat/youtube.js'
+import TextToSpeech from './tts.js'
 
 const outfolder = 'outputs'
 const outfile = 'out.txt'
 const olserver = 'http://192.168.0.22:11434'
 const systemPrompt = await fs.readFileSync('system.txt', 'utf8')
 const ollama = new Ollama({host: olserver})
+const tts = new TextToSpeech({voice: 'slt'})
 
 // Configuration for narration timing
 const NARRATION_INTERVAL = 30000 // 30 seconds between narrations
@@ -180,7 +182,7 @@ class StreamNarrator {
         model: 'hf.co/unsloth/Qwen3-30B-A3B-GGUF:Q4_K_M',
         system: this.systemPrompt,
         messages: this.messages,
-        tools: tools,
+        // tools: tools,
         options: {
           temperature: isNarration ? 1.2 : 1.0,
         },
@@ -197,6 +199,8 @@ class StreamNarrator {
       
       const cleanResponse = assistantResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
       fs.writeFileSync(outfile, cleanResponse)
+      await tts.speak(cleanResponse)
+
       
       console.log(`[History: ${this.messages.length} messages]`, assistantResponse)
     //   console.log(this.messages)
@@ -236,7 +240,7 @@ class StreamNarrator {
     
     if (this.recentChatMessages.length > 0) {
       narrationPrompt += `Recent chat activity: ${this.recentChatMessages.join(', ')}. `
-      this.recentChatMessages = this.recentChatMessages.slice(-1)
+      this.recentChatMessages = this.recentChatMessages.slice(-5)
     } else {
       narrationPrompt += "The chat has been quiet. "
     }
